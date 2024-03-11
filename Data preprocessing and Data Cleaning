@@ -1,1 +1,126 @@
 
+###Data Preprocessing of Weather variables ##########
+library(readxl)
+library(dplyr)
+library(openxlsx)
+
+# Set the working directory to the folder containing the Excel files
+folder_path <- "C:\\Users\\akash\\OneDrive\\Desktop\\ST-402 Project\\New folder (2)"
+
+# Get the list of Excel files in the folder (excluding temporary files)
+excel_files <- list.files(
+  path = folder_path,
+  pattern = "^[^~$].*\\.xlsx$",
+  full.names = TRUE
+)
+
+# Loop through each file and read it
+for (file in excel_files) {
+  # Read the Excel file
+  data <- readxl::read_excel(file)
+  
+  # Convert to tibble (if not already)
+  data <- as_tibble(data)
+  
+  # Create a new column 'Date' by combining YEAR, MO, and DY
+  data <- data %>%
+    mutate(Date = as.Date(paste(YEAR, MO, DY, sep = "-")))
+  
+  # Group by Year and Month, and calculate the mean for each variable
+  monthly_avg_data <- data %>%
+    group_by(YEAR, MO) %>%
+    summarise(
+      T2MDEW_mean = mean(T2MDEW, na.rm = TRUE),
+      T2M_MAX_mean = mean(T2M_MAX, na.rm = TRUE),
+      T2M_MIN_mean = mean(T2M_MIN, na.rm = TRUE),
+      RH2M_mean = mean(RH2M, na.rm = TRUE),
+      PRECTOTCORR_mean = mean(PRECTOTCORR, na.rm = TRUE),
+      WS10M_mean = mean(WS10M, na.rm = TRUE)
+    )
+  
+  # Define the output file path based on the original file's name
+  output_file <- paste0(tools::file_path_sans_ext(file), "_monthly_avg.xlsx")
+  
+  # Write the monthly average data to a new Excel file
+  openxlsx::write.xlsx(monthly_avg_data, output_file, rowNames = FALSE)
+  
+  # Print a message or do something else
+  cat("Processed file:", file, "\n")
+}
+
+
+###Data Preprocessing of Different Bird Species Count ##########
+
+library(readxl)
+library(tidyverse)
+# Set the working directory to the folder containing the Excel files
+folder_path1<- "C:\\Users\\akash\\OneDrive\\Desktop\\ST-402 Project\\Monthly bird count"
+# Get the list of Excel files in the folder (excluding temporary files)
+excel_files1 <- list.files(
+  path = folder_path1,
+  pattern = "^[^~$].*\\.xlsx$",
+  full.names = TRUE
+)
+
+# Loop through each file and read it
+for (file in excel_files1) {
+  # Read the Excel file
+  data <- readxl::read_excel(file)
+
+  cat("Read file:", file, "\n")
+}
+# If you want to combine the data from all files into a single data frame
+all_data1 <- lapply(excel_files1, readxl::read_excel)
+all_data1[[1]]
+
+# Set the working directory to the folder containing the Excel files
+folder_path<- "C:\\Users\\akash\\OneDrive\\Desktop\\ST-402 Project\\New folder (2)"
+# Get the list of Excel files in the folder (excluding temporary files)
+excel_files <- list.files(
+  path = folder_path,
+  pattern = "^[^~$].*\\.xlsx$",
+  full.names = TRUE
+)
+
+
+# Loop through each file and read it
+for (file in excel_files) {
+  # Read the Excel file
+  data <- readxl::read_excel(file)
+  
+  # Process your data or perform any desired operations here
+  
+  # Print the file name or do something else
+  cat("Read file:", file, "\n")
+}
+all_data <- lapply(excel_files, readxl::read_excel)
+
+locfile=read.csv("C:\\Users\\akash\\Downloads\\output.csv")
+
+locfile <- locfile %>%
+  arrange(STATE, desc(COUNT))
+top5_locations <- locfile %>%
+  group_by(STATE) %>%
+  slice_head(n = 5)
+locations=top5_locations$Locality
+selected_locations <- locations[81:85]
+
+# Loop through each selected location
+for (location in selected_locations) {
+  # Extract the relevant data from all_data[[1]]
+  result_data <- all_data[[17]] %>%
+    semi_join(all_data1[[17]] %>%
+                filter(data.LOCALITY == location), 
+              by = c("YEAR" = "year", "MO" = "month"))
+  
+  # Save the resulting data to a file with the location's name, adjust the file path accordingly
+  file_path <- paste0("C:\\Users\\akash\\OneDrive\\Desktop\\Karnataka_", gsub(" ", "_", location), ".csv")
+  write.csv(result_data, file_path, row.names = FALSE)
+  
+  # Print a message or do something else
+  cat("Saved data for location:", location, "to", file_path, "\n")
+}
+
+
+
+
